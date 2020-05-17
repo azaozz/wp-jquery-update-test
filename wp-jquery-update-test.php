@@ -13,6 +13,7 @@
  * License: GPLv2
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-jquery-test
+ * Network: true
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,21 +38,23 @@ class WP_Jquery_Update_Test {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_scripts' ), -1 );
 
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu_item' ) );
+		add_action( 'network_admin_menu', array( __CLASS__, 'add_menu_item' ) );
+
 		add_action( 'admin_init', array( __CLASS__, 'save_settings' ) );
 	}
 
 	public static function register_scripts() {
 		$settings = get_site_option( 'wp-jquery-test-settings', array() );
 		$defaults = array(
-			'version'    => 'default',
-			'migrate'    => 'enable',
+			'version'   => 'default',
+			'migrate'   => 'disable',
 			'uiversion' => 'default',
 		);
 
 		$settings = wp_parse_args( $settings, $defaults );
 
 		if ( 'default' === $settings['version'] ) {
-			// If jquery-migrate.js disabled
+			// If Migrate is disabled
 			if ( 'disable' === $settings['migrate'] ) {
 				// Re-register jQuery without jquery-migrate.js
 				wp_deregister_script( array( 'jquery', 'jquery-migrate' ) );
@@ -130,7 +133,7 @@ class WP_Jquery_Update_Test {
 
 		// The core.js in 1.12.1 only defines dependencies.
 		// Here is it concatenated using another build task in WP core's Grunt.
-		// The separate jQuery UI core parts are still present for APM compatibility (is this needed?),
+		// The separate jQuery UI core parts are still present for AMD compatibility (is this needed?),
 		// but are not registered in script-loader as they are included in ui/core.js.
 		wp_register_script( 'jquery-ui-core', "{$assets_url}/core{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
 		wp_register_script( 'jquery-effects-core', "{$assets_url}/effect{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
@@ -177,7 +180,7 @@ class WP_Jquery_Update_Test {
 		wp_register_script( 'jquery-ui-controlgroup', "{$assets_url}/controlgroup{$dev_suffix}.js", array( 'jquery-ui-widget' ), '1.12.1', true );
 
 		/*
-		// For using full concatenated jQuery UI (it's big..)
+		// If using full concatenated jQuery UI (it's big...)
 		wp_register_script( 'jquery-ui', $assets_url . 'jquery-ui.min.js', array( 'jquery' ), '1.12.1', true );
 
 		foreach( $handles as $handle ) {
@@ -247,7 +250,7 @@ class WP_Jquery_Update_Test {
 		$settings = get_site_option( 'wp-jquery-test-settings', array() );
 		$defaults = array(
 			'version'   => 'default',
-			'migrate'   => 'enable',
+			'migrate'   => 'disable',
 			'uiversion' => 'default',
 		);
 
@@ -276,24 +279,41 @@ class WP_Jquery_Update_Test {
 				<?php _e( 'More information:', 'wp-jquery-test' ); ?>
 				<?php
 					printf(
-						__( '<a href="%s">jQuery Core 3.0 Upgrade Guide</a>', 'wp-jquery-test' ),
+						__( '<a href="%s">jQuery Core 3.0 Upgrade Guide</a>,', 'wp-jquery-test' ),
 						'https://jquery.com/upgrade-guide/3.0/'
 					);
 				?>
 				<?php
 					printf(
-						__( '<a href="%s">jQuery Core 3.5 Upgrade Guide</a>', 'wp-jquery-test' ),
+						__( '<a href="%s">jQuery Core 3.5 Upgrade Guide</a>.', 'wp-jquery-test' ),
 						'https://jquery.com/upgrade-guide/3.5/'
 					);
 				?>
 			</li>
-			<li><?php _e( 'Latest jQuery without jQuery Migrate. This is tentatively planned for WordPress 5.7.', 'wp-jquery-test' ); ?></li>
+			<li><?php _e( 'Latest jQuery without jQuery Migrate. This is tentatively planned for WordPress 5.7 depending on test results.', 'wp-jquery-test' ); ?></li>
 		</ol>
 
 		<p>
-			<?php _e( 'The latest version of jQuery UI, 1.12.1, is also included.', 'wp-jquery-test' ); ?>
+			<?php _e( 'The plugin also includes the latest version of jQuery UI, 1.12.1.', 'wp-jquery-test' ); ?>
 			<?php _e( 'It has been re-built for full backwards compatibility with WordPress.', 'wp-jquery-test' ); ?>
+			<?php _e( 'The jQuery UI update does not depend on the jQuery update and is tentatively planned for WordPress 5.6 depending on test results.', 'wp-jquery-test' ); ?>
 		</p>
+
+		<p>
+			<?php
+				printf(
+					__( 'If you find a bug in WordPress Admin or in a jQuery plugin while testing, please report it at <a href="%s">(TBD)</a>.', 'wp-jquery-test' ),
+					'https://github.com/WordPress'
+				);
+			?>
+			<?php
+				printf(
+					__( 'If the bug is in a jQuery plugin please also check for <a href="%s">a new version on NPM that fixes the issue</a>.', 'wp-jquery-test' ),
+					'https://www.npmjs.com/search?q=keywords:jquery-plugin'
+				);
+			?>
+		</p>
+
 		<form method="post">
 		<?php wp_nonce_field( 'wp-jquery-test-settings', 'wp-jquery-test-save' ); ?>
 		<table class="form-table">
@@ -358,10 +378,10 @@ class WP_Jquery_Update_Test {
 	}
 
 	public static function add_menu_item() {
-		$menu_title  = __( 'jQuery Update Test', 'wp-jquery-test' );
+		$menu_title = __( 'jQuery Update Test', 'wp-jquery-test' );
 		$page_title = __( 'jQuery update test settings', 'wp-jquery-test' );
 
-		add_management_page( $page_title, $menu_title, 'install_plugins', 'wp-jquery-update-test', array( __CLASS__, 'settings_ui' ) );
+		add_plugins_page( $page_title, $menu_title, 'install_plugins', 'wp-jquery-update-test', array( __CLASS__, 'settings_ui' ) );
 	}
 
 	/**
