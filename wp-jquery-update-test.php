@@ -272,14 +272,21 @@ class WP_Jquery_Update_Test {
 		<?php } ?>
 
 		<p>
-			<?php _e( 'This plugin is intended for testing of different versions of jQuery, jQuery Migrate, and jQuery UI.', 'wp-jquery-test' ); ?>
-			<?php _e( 'There are several intended tests:', 'wp-jquery-test' ); ?>
+			<?php _e( 'This plugin is intended for testing of different versions of jQuery and jQuery UI before updating them in WordPress. It is not intended for use in production.', 'wp-jquery-test' ); ?>
+		</p>
+
+		<p>
+			<?php _e( 'It includes jQuery 3.5.1, jQuery Migrate 3.3.0, and jQuery UI 1.12.1. jQuery UI has been re-built for full backwards compatibility with WordPress.', 'wp-jquery-test' ); ?>
+		</p>
+
+		<p>
+			<?php _e( 'To test:', 'wp-jquery-test' ); ?>
 		</p>
 
 		<ol>
-			<li><?php _e( 'Use the current version of jQuery but disable jQuery Migrate. This is planned for WordPress 5.5 and is the default setting.', 'wp-jquery-test' ); ?></li>
+			<li><?php _e( 'Use the current version of jQuery in WordPress but disable jQuery Migrate. This is planned for WordPress 5.5 and is the default setting.', 'wp-jquery-test' ); ?></li>
 			<li>
-				<?php _e( 'Latest jQuery, currently 3.5.1, with the latest jQuery Migrate, currently 3.3.0. This is planned for WordPress 5.6.', 'wp-jquery-test' ); ?>
+				<?php _e( 'Latest jQuery with the latest jQuery Migrate.', 'wp-jquery-test' ); ?>
 				<?php _e( 'More information:', 'wp-jquery-test' ); ?>
 				<?php
 					printf(
@@ -294,19 +301,14 @@ class WP_Jquery_Update_Test {
 					);
 				?>
 			</li>
-			<li><?php _e( 'Latest jQuery without jQuery Migrate. This is tentatively planned for WordPress 5.7 depending on test results.', 'wp-jquery-test' ); ?></li>
+			<li><?php _e( 'Latest jQuery with latest jQuery Migrate and latest jQuery UI. This is tentatively planned for WordPress 5.6 depending on test results.', 'wp-jquery-test' ); ?></li>
+			<li><?php _e( 'Latest jQuery without jQuery Migrate, and latest jQuery UI. This is tentatively planned for WordPress 5.7 depending on test results.', 'wp-jquery-test' ); ?></li>
 		</ol>
-
-		<p>
-			<?php _e( 'The plugin also includes the latest version of jQuery UI, 1.12.1.', 'wp-jquery-test' ); ?>
-			<?php _e( 'It has been re-built for full backwards compatibility with WordPress.', 'wp-jquery-test' ); ?>
-			<?php _e( 'The jQuery UI update does not depend on the jQuery update and is tentatively planned for WordPress 5.6 depending on test results.', 'wp-jquery-test' ); ?>
-		</p>
 
 		<p>
 			<?php
 				printf(
-					__( 'If you find a bug in WordPress Admin or in a jQuery plugin while testing, please report it at <a href="%s">(TBD)</a>.', 'wp-jquery-test' ),
+					__( 'If you find a bug in a WordPress script or in a jQuery plugin, please report it at <a href="%s">(TBD)</a>.', 'wp-jquery-test' ),
 					'https://github.com/WordPress'
 				);
 			?>
@@ -316,6 +318,7 @@ class WP_Jquery_Update_Test {
 					'https://www.npmjs.com/search?q=keywords:jquery-plugin'
 				);
 			?>
+			<?php _e( 'When reporting an issue please include the versions of jQuery, jQuery Migrate (if enabled), and jQuery UI.', 'wp-jquery-test' ); ?>
 		</p>
 
 		<form method="post">
@@ -378,13 +381,6 @@ class WP_Jquery_Update_Test {
 		<?php submit_button(); ?>
 		</form>
 		</div>
-		<script>
-		try{
-			if ( window.location.href.indexOf( '&jqtest-settings-saved' ) ) {
-				window.history.replaceState( null, null, window.location.href.replace( '&jqtest-settings-saved', '' ) );
-			}
-		} catch( er ){}
-		</script>
 		<?php
 	}
 
