@@ -40,6 +40,10 @@ class WP_Jquery_Update_Test {
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu_item' ) );
 		add_action( 'network_admin_menu', array( __CLASS__, 'add_menu_item' ) );
 
+		// Add a link to the plugin's settings in the plugins list table.
+		add_filter( 'plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
+		add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
+
 		add_action( 'admin_init', array( __CLASS__, 'save_settings' ) );
 	}
 
@@ -240,7 +244,7 @@ class WP_Jquery_Update_Test {
 
 		update_site_option( 'wp-jquery-test-settings', $settings );
 
-		$redirect = self_admin_url( 'tools.php?page=wp-jquery-update-test&jqtest-settings-saved' );
+		$redirect = self_admin_url( 'plugins.php?page=wp-jquery-update-test&jqtest-settings-saved' );
 		wp_safe_redirect( $redirect );
 		exit;
 	}
@@ -374,6 +378,13 @@ class WP_Jquery_Update_Test {
 		<?php submit_button(); ?>
 		</form>
 		</div>
+		<script>
+		try{
+			if ( window.location.href.indexOf( '&jqtest-settings-saved' ) ) {
+				window.history.replaceState( null, null, window.location.href.replace( '&jqtest-settings-saved', '' ) );
+			}
+		} catch( er ){}
+		</script>
 		<?php
 	}
 
@@ -382,6 +393,17 @@ class WP_Jquery_Update_Test {
 		$page_title = __( 'jQuery update test settings', 'wp-jquery-test' );
 
 		add_plugins_page( $page_title, $menu_title, 'install_plugins', 'wp-jquery-update-test', array( __CLASS__, 'settings_ui' ) );
+	}
+
+	public static function add_settings_link( $links, $file ) {
+		if ( $file === 'wp-jquery-update-test/wp-jquery-update-test.php' && current_user_can( 'install_plugins' ) ) {
+			// Prevent PHP warnings when a plugin uses this filter incorrectly.
+			$links = (array) $links;
+			$url   = self_admin_url( 'plugins.php?page=wp-jquery-update-test' );
+			$links[] = sprintf( '<a href="%s">%s</a>', $url, __( 'Settings', 'wp-jquery-test' ) );
+		}
+
+		return $links;
 	}
 
 	/**
