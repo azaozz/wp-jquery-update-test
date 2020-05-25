@@ -314,11 +314,11 @@ class WP_Jquery_Update_Test {
 			?>
 			<?php
 				printf(
-					__( 'If the bug is in a jQuery plugin please also check for <a href="%s">a new version on NPM that fixes the issue</a>.', 'wp-jquery-test' ),
+					__( 'If the bug is in a jQuery plugin please also check for <a href="%s">a new version on NPM that fixes it</a>.', 'wp-jquery-test' ),
 					'https://www.npmjs.com/search?q=keywords:jquery-plugin'
 				);
 			?>
-			<?php _e( 'When reporting an issue please include the versions of jQuery, jQuery Migrate (if enabled), and jQuery UI.', 'wp-jquery-test' ); ?>
+			<?php _e( 'When reporting an issue please include the versions of jQuery, jQuery Migrate (if enabled), jQuery UI, and the jQuery plugin if relevant.', 'wp-jquery-test' ); ?>
 		</p>
 
 		<form method="post">
