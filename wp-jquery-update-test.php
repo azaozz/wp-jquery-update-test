@@ -29,13 +29,11 @@ class WP_Jquery_Update_Test {
 		// To be able to replace the src, scripts should not be concatenated.
 		if ( ! defined( 'CONCATENATE_SCRIPTS' ) ) {
 			define( 'CONCATENATE_SCRIPTS', false );
-		} else {
-			$GLOBALS['concatenate_scripts'] = false;
 		}
 
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register_scripts' ), -1 );
-		add_action( 'login_enqueue_scripts', array( __CLASS__, 'register_scripts' ), -1 );
-		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register_scripts' ), -1 );
+		$GLOBALS['concatenate_scripts'] = false;
+
+		add_action( 'wp_default_scripts', array( __CLASS__, 'replace_scripts' ), -1 );
 
 		add_action( 'admin_menu', array( __CLASS__, 'add_menu_item' ) );
 		add_action( 'network_admin_menu', array( __CLASS__, 'add_menu_item' ) );
@@ -47,7 +45,7 @@ class WP_Jquery_Update_Test {
 		add_action( 'admin_init', array( __CLASS__, 'save_settings' ) );
 	}
 
-	public static function register_scripts() {
+	public static function replace_scripts( $scripts ) {
 		$settings = get_site_option( 'wp-jquery-test-settings', array() );
 		$defaults = array(
 			'version'   => 'default',
@@ -60,149 +58,112 @@ class WP_Jquery_Update_Test {
 		if ( 'default' === $settings['version'] ) {
 			// If Migrate is disabled
 			if ( 'disable' === $settings['migrate'] ) {
-				// Re-register jQuery without jquery-migrate.js
-				wp_deregister_script( array( 'jquery', 'jquery-migrate' ) );
-				wp_register_script( 'jquery', '/wp-includes/js/jquery/jquery.js', array(), '1.12.4-wp' );
+				// Register jQuery without jquery-migrate.js
+				self::set_script( $scripts, 'jquery', false, array( 'jquery-core' ), '1.12.4-wp' );
 			}
 		} elseif ( '3.5.1' === $settings['version'] ) {
 			$assets_url = plugins_url( 'assets/', __FILE__ );
 
-			$remove = array(
-				'jquery',
-				'jquery-core',
-				'jquery-migrate',
-			);
-
-			wp_deregister_script( $remove );
-
 			if ( 'disable' === $settings['migrate'] ) {
-				wp_register_script( 'jquery', $assets_url . 'jquery-3.5.1.min.js', array(), '3.5.1' );
+				// Register jQuery without jquery-migrate.js
+				self::set_script( $scripts, 'jquery', false, array( 'jquery-core' ), '3.5.1' );
+
+				// Set 'jquery-core' to 3.5.1
+				self::set_script( $scripts, 'jquery-core', $assets_url . 'jquery-3.5.1.min.js', array(), '3.5.1' );
+
+				// Reset/remove 'jquery-migrate'
+				// TBD: needed?
+				self::set_script( $scripts, 'jquery-migrate', false, array() );
 			} else {
-				wp_register_script( 'jquery', false, array( 'jquery-core', 'jquery-migrate' ), '3.5.1' );
-				wp_register_script( 'jquery-core', $assets_url . 'jquery-3.5.1.min.js', array(), '3.5.1' );
-				wp_register_script( 'jquery-migrate', $assets_url . 'jquery-migrate-3.3.0.min.js', array(), '3.3.0' );
+				self::set_script( $scripts, 'jquery', false, array( 'jquery-core', 'jquery-migrate' ), '3.5.1' );
+				self::set_script( $scripts, 'jquery-core', $assets_url . 'jquery-3.5.1.min.js', array(), '3.5.1' );
+				self::set_script( $scripts, 'jquery-migrate', $assets_url . 'jquery-migrate-3.3.0.min.js', array(), '3.3.0' );
 			}
 
 			if ( '1.12.1' === $settings['uiversion'] ) {
-				self::jquery_ui_1121();
+				self::jquery_ui_1121( $scripts );
 			}
 		}
 	}
 
-	private static function jquery_ui_1121() {
+	// Replace UI 1.11.4 with 1.12.1
+	private static function jquery_ui_1121( $scripts ) {
 		$assets_url = plugins_url( 'assets/ui', __FILE__ );
 		$dev_suffix = wp_scripts_get_suffix( 'dev' );
-
-		$handles = array(
-			'jquery-ui-core',
-			'jquery-effects-core',
-			'jquery-effects-blind',
-			'jquery-effects-bounce',
-			'jquery-effects-clip',
-			'jquery-effects-drop',
-			'jquery-effects-explode',
-			'jquery-effects-fade',
-			'jquery-effects-fold',
-			'jquery-effects-highlight',
-			'jquery-effects-puff',
-			'jquery-effects-pulsate',
-			'jquery-effects-scale',
-			'jquery-effects-shake',
-			'jquery-effects-size',
-			'jquery-effects-slide',
-			'jquery-effects-transfer',
-			'jquery-ui-accordion',
-			'jquery-ui-autocomplete',
-			'jquery-ui-button',
-			'jquery-ui-datepicker',
-			'jquery-ui-dialog',
-			'jquery-ui-draggable',
-			'jquery-ui-droppable',
-			'jquery-ui-menu',
-			'jquery-ui-mouse',
-			'jquery-ui-position',
-			'jquery-ui-progressbar',
-			'jquery-ui-resizable',
-			'jquery-ui-selectable',
-			'jquery-ui-selectmenu',
-			'jquery-ui-slider',
-			'jquery-ui-sortable',
-			'jquery-ui-spinner',
-			'jquery-ui-tabs',
-			'jquery-ui-tooltip',
-			'jquery-ui-widget',
-		);
-
-		wp_deregister_script( $handles );
 
 		// The core.js in 1.12.1 only defines dependencies.
 		// Here is it concatenated using another build task in WP core's Grunt.
 		// The separate jQuery UI core parts are still present for AMD compatibility (is this needed?),
 		// but are not registered in script-loader as they are included in ui/core.js.
-		wp_register_script( 'jquery-ui-core', "{$assets_url}/core{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-core', "{$assets_url}/effect{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-core', "{$assets_url}/core{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-core', "{$assets_url}/effect{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
 
-		wp_register_script( 'jquery-effects-blind', "{$assets_url}/effect-blind{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-bounce', "{$assets_url}/effect-bounce{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-clip', "{$assets_url}/effect-clip{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-drop', "{$assets_url}/effect-drop{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-explode', "{$assets_url}/effect-explode{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-fade', "{$assets_url}/effect-fade{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-fold', "{$assets_url}/effect-fold{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-highlight', "{$assets_url}/effect-highlight{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-puff', "{$assets_url}/effect-puff{$dev_suffix}.js", array( 'jquery-effects-core', 'jquery-effects-scale' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-pulsate', "{$assets_url}/effect-pulsate{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-scale', "{$assets_url}/effect-scale{$dev_suffix}.js", array( 'jquery-effects-core', 'jquery-effects-size' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-shake', "{$assets_url}/effect-shake{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-size', "{$assets_url}/effect-size{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-slide', "{$assets_url}/effect-slide{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-effects-transfer', "{$assets_url}/effect-transfer{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-blind', "{$assets_url}/effect-blind{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-bounce', "{$assets_url}/effect-bounce{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-clip', "{$assets_url}/effect-clip{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-drop', "{$assets_url}/effect-drop{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-explode', "{$assets_url}/effect-explode{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-fade', "{$assets_url}/effect-fade{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-fold', "{$assets_url}/effect-fold{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-highlight', "{$assets_url}/effect-highlight{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-puff', "{$assets_url}/effect-puff{$dev_suffix}.js", array( 'jquery-effects-core', 'jquery-effects-scale' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-pulsate', "{$assets_url}/effect-pulsate{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-scale', "{$assets_url}/effect-scale{$dev_suffix}.js", array( 'jquery-effects-core', 'jquery-effects-size' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-shake', "{$assets_url}/effect-shake{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-size', "{$assets_url}/effect-size{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-slide', "{$assets_url}/effect-slide{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-effects-transfer', "{$assets_url}/effect-transfer{$dev_suffix}.js", array( 'jquery-effects-core' ), '1.12.1', true );
 
-		wp_register_script( 'jquery-ui-accordion', "{$assets_url}/accordion{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-autocomplete', "{$assets_url}/autocomplete{$dev_suffix}.js", array( 'jquery-ui-menu', 'wp-a11y' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-button', "{$assets_url}/button{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-controlgroup', 'jquery-ui-checkboxradio' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-datepicker', "{$assets_url}/datepicker{$dev_suffix}.js", array( 'jquery-ui-core' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-dialog', "{$assets_url}/dialog{$dev_suffix}.js", array( 'jquery-ui-resizable', 'jquery-ui-draggable', 'jquery-ui-button', 'jquery-ui-position' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-draggable', "{$assets_url}/draggable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-droppable', "{$assets_url}/droppable{$dev_suffix}.js", array( 'jquery-ui-draggable' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-menu', "{$assets_url}/menu{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-position' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-mouse', "{$assets_url}/mouse{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-position', "{$assets_url}/position{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-progressbar', "{$assets_url}/progressbar{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-resizable', "{$assets_url}/resizable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-selectable', "{$assets_url}/selectable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-selectmenu', "{$assets_url}/selectmenu{$dev_suffix}.js", array( 'jquery-ui-menu' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-slider', "{$assets_url}/slider{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-sortable', "{$assets_url}/sortable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-spinner', "{$assets_url}/spinner{$dev_suffix}.js", array( 'jquery-ui-button' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-tabs', "{$assets_url}/tabs{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-tooltip', "{$assets_url}/tooltip{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-position' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-widget', "{$assets_url}/widget{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-accordion', "{$assets_url}/accordion{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-autocomplete', "{$assets_url}/autocomplete{$dev_suffix}.js", array( 'jquery-ui-menu', 'wp-a11y' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-button', "{$assets_url}/button{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-controlgroup', 'jquery-ui-checkboxradio' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-datepicker', "{$assets_url}/datepicker{$dev_suffix}.js", array( 'jquery-ui-core' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-dialog', "{$assets_url}/dialog{$dev_suffix}.js", array( 'jquery-ui-resizable', 'jquery-ui-draggable', 'jquery-ui-button', 'jquery-ui-position' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-draggable', "{$assets_url}/draggable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-droppable', "{$assets_url}/droppable{$dev_suffix}.js", array( 'jquery-ui-draggable' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-menu', "{$assets_url}/menu{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-position' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-mouse', "{$assets_url}/mouse{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-position', "{$assets_url}/position{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-progressbar', "{$assets_url}/progressbar{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-resizable', "{$assets_url}/resizable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-selectable', "{$assets_url}/selectable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-selectmenu', "{$assets_url}/selectmenu{$dev_suffix}.js", array( 'jquery-ui-menu' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-slider', "{$assets_url}/slider{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-sortable', "{$assets_url}/sortable{$dev_suffix}.js", array( 'jquery-ui-mouse' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-spinner', "{$assets_url}/spinner{$dev_suffix}.js", array( 'jquery-ui-button' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-tabs', "{$assets_url}/tabs{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-tooltip', "{$assets_url}/tooltip{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget', 'jquery-ui-position' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-widget', "{$assets_url}/widget{$dev_suffix}.js", array( 'jquery' ), '1.12.1', true );
 
 		// New in 1.12.1
-		wp_register_script( 'jquery-ui-checkboxradio', "{$assets_url}/checkboxradio{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
-		wp_register_script( 'jquery-ui-controlgroup', "{$assets_url}/controlgroup{$dev_suffix}.js", array( 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-checkboxradio', "{$assets_url}/checkboxradio{$dev_suffix}.js", array( 'jquery-ui-core', 'jquery-ui-widget' ), '1.12.1', true );
+		self::set_script( $scripts, 'jquery-ui-controlgroup', "{$assets_url}/controlgroup{$dev_suffix}.js", array( 'jquery-ui-widget' ), '1.12.1', true );
+	}
 
-		/*
-		// If using full concatenated jQuery UI (it's big...)
-		wp_register_script( 'jquery-ui', $assets_url . 'jquery-ui.min.js', array( 'jquery' ), '1.12.1', true );
+	// Pre-register scripts on 'wp_default_scripts' action, they won't be overwritten by $wp_scripts->add().
+	private static function set_script( $scripts, $handle, $src, $deps = array(), $ver = false, $in_footer = false ) {
+		$script = $scripts->query( $handle, 'registered' );
 
-		foreach( $handles as $handle ) {
-			wp_register_script( $handle, false, array( 'jquery-ui' ), '1.12.1', true );
+		if ( $script ) {
+			// If already added
+			$script->src  = $src;
+			$script->deps = $deps;
+			$script->ver  = $ver;
+			$script->args = $in_footer;
+
+			unset( $script->extra['group'] );
+
+			if ( $in_footer ) {
+				$script->add_data( 'group', 1 );
+			}
+		} else {
+			// Add the script
+			if ( $in_footer ) {
+				$scripts->add( $handle, $src, $deps, $ver, 1 );
+			} else {
+				$scripts->add( $handle, $src, $deps, $ver );
+			}
 		}
-		*/
-
-		// Strings for 'jquery-ui-autocomplete' live region messages.
-		$strings = array(
-			'noResults'    => __( 'No results found.' ),
-			/* translators: Number of results found when using jQuery UI Autocomplete. */
-			'oneResult'    => __( '1 result found. Use up and down arrow keys to navigate.' ),
-			/* translators: %d: Number of results found when using jQuery UI Autocomplete. */
-			'manyResults'  => __( '%d results found. Use up and down arrow keys to navigate.' ),
-			'itemSelected' => __( 'Item selected.' ),
-		);
-
-		wp_localize_script( 'jquery-ui-autocomplete', 'uiAutocompleteL10n', $strings );
 	}
 
 	public static function save_settings() {
