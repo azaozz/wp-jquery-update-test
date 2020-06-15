@@ -2,7 +2,7 @@
 /*
  * Plugin Name: WordPress jQuery Update Test
  * Plugin URI: https://wordpress.org/plugins/
- * Description: A feature plugin to help with testing updates of the jQuery and jQuery UI JavaScript libraries.
+ * Description: A feature plugin to help with testing updates of the jQuery and jQuery UI JavaScript libraries (not intended for use in production).
  * Version: 1.0.0
  * Requires at least: 5.4
  * Tested up to: 5.5
@@ -43,6 +43,10 @@ class WP_Jquery_Update_Test {
 		add_filter( 'network_admin_plugin_action_links', array( __CLASS__, 'add_settings_link' ), 10, 2 );
 
 		add_action( 'admin_init', array( __CLASS__, 'save_settings' ) );
+
+		// Print version info in the console.
+		add_action( 'admin_print_footer_scripts', array( __CLASS__, 'print_versions' ), 100 );
+		add_action( 'wp_print_footer_scripts', array( __CLASS__, 'print_versions' ), 100 );
 	}
 
 	public static function replace_scripts( $scripts ) {
@@ -383,6 +387,29 @@ class WP_Jquery_Update_Test {
 	 */
 	public static function uninstall() {
 		delete_site_option( 'wp-jquery-test-settings' );
+	}
+
+	/**
+	 * Print version info in the console.
+	 */
+	public static function print_versions() {
+		?>
+		<script>
+		if ( window.console && window.console.log && window.jQuery ) {
+			window.jQuery( function( $ ) {
+				var jquery = $.fn.jquery || 'unknown';
+				var migrate = $.migrateVersion || 'not available';
+				var ui = ( $.ui && $.ui.version ) || 'not available';
+
+				window.console.log(
+					'WordPress jQuery:', jquery + ',',
+					'Migrate:', migrate + ',',
+					'UI:', ui
+				);
+			} );
+		}
+		</script>
+		<?php
 	}
 }
 

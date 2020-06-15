@@ -3,7 +3,7 @@ Contributors: wordpressdotorg, azaozz
 Tags: jquery
 Requires at least: 5.4
 Tested up to: 5.5
-Stable tag: 1.0
+Stable tag: 1.0.0
 Requires PHP: 5.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -27,9 +27,9 @@ If you find a bug in a WordPress script or in a jQuery plugin please report it. 
 
 = Default settings =
 
-When activated this plugin will disable jQuery Migrate. For more information about jQuery Migrate please visit: [https://github.com/jquery/jquery-migrate/](https://github.com/jquery/jquery-migrate/).
+When activated this plugin will not replace the current jQuery but will disable jQuery Migrate. For more information about jQuery Migrate please visit: [https://github.com/jquery/jquery-migrate/](https://github.com/jquery/jquery-migrate/).
 
 == Changelog ==
 
-= 1.0 =
+= 1.0.0 =
 Initial release.
