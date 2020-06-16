@@ -1,6 +1,6 @@
 <?php
 /*
- * Plugin Name: WordPress jQuery Update Test
+ * Plugin Name: jQuery Update Test
  * Plugin URI: https://wordpress.org/plugins/
  * Description: A feature plugin to help with testing updates of the jQuery and jQuery UI JavaScript libraries (not intended for use in production).
  * Version: 1.0.0
@@ -23,6 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'WP_Jquery_Update_Test' ) ) :
 class WP_Jquery_Update_Test {
 
+	private static $plugin_dir_name;
 	private function __construct() {}
 
 	public static function init_actions() {
@@ -32,6 +33,8 @@ class WP_Jquery_Update_Test {
 		}
 
 		$GLOBALS['concatenate_scripts'] = false;
+
+		self::$plugin_dir_name = basename( __DIR__ );
 
 		add_action( 'wp_default_scripts', array( __CLASS__, 'replace_scripts' ), -1 );
 
@@ -209,7 +212,7 @@ class WP_Jquery_Update_Test {
 
 		update_site_option( 'wp-jquery-test-settings', $settings );
 
-		$redirect = self_admin_url( 'plugins.php?page=wp-jquery-update-test&jqtest-settings-saved' );
+		$redirect = self_admin_url( 'plugins.php?page=' . self::$plugin_dir_name . '&jqtest-settings-saved' );
 		wp_safe_redirect( $redirect );
 		exit;
 	}
@@ -353,14 +356,16 @@ class WP_Jquery_Update_Test {
 		$menu_title = __( 'jQuery Update Test', 'wp-jquery-test' );
 		$page_title = __( 'jQuery update test settings', 'wp-jquery-test' );
 
-		add_plugins_page( $page_title, $menu_title, 'install_plugins', 'wp-jquery-update-test', array( __CLASS__, 'settings_ui' ) );
+		add_plugins_page( $page_title, $menu_title, 'install_plugins', self::$plugin_dir_name, array( __CLASS__, 'settings_ui' ) );
 	}
 
 	public static function add_settings_link( $links, $file ) {
-		if ( $file === 'wp-jquery-update-test/wp-jquery-update-test.php' && current_user_can( 'install_plugins' ) ) {
+		$plugin_basename = plugin_basename( __FILE__ );
+
+		if ( $file === $plugin_basename && current_user_can( 'install_plugins' ) ) {
 			// Prevent PHP warnings when a plugin uses this filter incorrectly.
-			$links = (array) $links;
-			$url   = self_admin_url( 'plugins.php?page=wp-jquery-update-test' );
+			$links   = (array) $links;
+			$url     = self_admin_url( 'plugins.php?page=' . self::$plugin_dir_name );
 			$links[] = sprintf( '<a href="%s">%s</a>', $url, __( 'Settings', 'wp-jquery-test' ) );
 		}
 
