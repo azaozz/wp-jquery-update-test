@@ -1,4 +1,4 @@
-=== jQuery Update Test ===
+=== Test jQuery Updates ===
 Contributors: wordpressdotorg, azaozz
 Tags: jquery
 Requires at least: 5.4
