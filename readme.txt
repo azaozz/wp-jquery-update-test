@@ -12,7 +12,7 @@ Test different versions of jQuery and jQuery UI.
 
 == Description ==
 
-jQuery Update Test is an official plugin by the WordPress team that is intended for testing of different versions of jQuery and jQuery UI before updating them in WordPress. It is not intended for use in production.
+Test jQuery Updates is an official plugin by the WordPress team that is intended for testing of different versions of jQuery and jQuery UI before updating them in WordPress. It is not intended for use in production.
 
 It includes jQuery 3.5.1, jQuery Migrate 3.3.0, and jQuery UI 1.12.1. jQuery UI has been re-built for full backwards compatibility with WordPress.
 
@@ -23,7 +23,7 @@ To test:
 3. Latest jQuery with the latest jQuery Migrate and latest jQuery UI.
 4. As above without jQuery Migrate.
 
-If you find a bug in a WordPress script or in a jQuery plugin please report it. Instructions are available at the plugin's settings page.
+If you find a bug in a jQuery related script please report it. Instructions are available at the plugin's settings page.
 
 = Default settings =
 

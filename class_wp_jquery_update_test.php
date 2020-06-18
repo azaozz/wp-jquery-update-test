@@ -40,11 +40,6 @@ class WP_Jquery_Update_Test {
 	}
 
 	public static function replace_scripts( $scripts ) {
-		// Only for WP 5.5.x or lower (for now)
-		if ( version_compare( $GLOBALS['wp_version'], '5.6-alpha', '>=' ) ) {
-			return;
-		}
-
 		$settings = get_site_option( 'wp-jquery-test-settings', array() );
 		$defaults = array(
 			'version'   => 'default',
@@ -360,12 +355,11 @@ class WP_Jquery_Update_Test {
 
 	public static function add_menu_item() {
 		$menu_title = __( 'Test jQuery Updates', 'wp-jquery-test' );
-
 		add_plugins_page( $menu_title, $menu_title, 'install_plugins', self::$plugin_dir_name, array( __CLASS__, 'settings_ui' ) );
 	}
 
 	public static function add_settings_link( $links, $file ) {
-		$plugin_basename = plugin_basename( __FILE__ );
+		$plugin_basename = self::$plugin_dir_name . '/wp-jquery-update-test.php';
 
 		if ( $file === $plugin_basename && current_user_can( 'install_plugins' ) ) {
 			// Prevent PHP warnings when a plugin uses this filter incorrectly.
